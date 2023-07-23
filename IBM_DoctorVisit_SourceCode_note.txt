@@ -1,0 +1,150 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+df = pd.read_excel("final_dataset_doctorvisit_excel.xlsx")
+df.head(15)
+
+df.info()
+
+df["active_illness"].value_counts()
+
+# Plotting the kernel density estimation (KDE) plot
+plt.figure(figsize=(6, 4))
+sns.kdeplot(income_data, color='skyblue', fill=True, linewidth=2)
+plt.xlabel('Income per Month')
+plt.ylabel('Density')
+plt.title('Kernel Density Estimation of Income per Month for patients with active illness')
+plt.grid(True)
+plt.show()
+
+# Separate data for males and females
+male_data = df[df['gender'] == 'Male']
+female_data = df[df['gender'] == 'Female']
+
+# Calculate the total reduced days for males and females
+total_reduced_days_male = male_data['reduced_illness'].sum()
+total_reduced_days_female = female_data['reduced_illness'].sum()
+
+# Create a pie chart
+labels = ['Male', 'Female']
+sizes = [total_reduced_days_male, total_reduced_days_female]
+colors = ['blue', 'pink']
+plt.figure(figsize=(6, 4))
+plt.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+plt.title('Proportion of Reduced Days of Work due to illness by Gender')
+plt.show()
+
+income_ranges = [0, 2000, 4000, 6000, 8000, 10000, float('inf')]
+income_labels = ['< 2000', '2000-4000', '4000-6000', '6000-8000', '8000-10000', '>= 10000']
+
+# Segment data into income groups
+df['income_group'] = pd.cut(df['income_pm'], bins=income_ranges, labels=income_labels)
+
+# Plotting the box plot
+plt.figure(figsize=(8, 5))
+sns.boxplot(x='income_group', y='visits_pm', data=df, color='skyblue')
+plt.xlabel('Income Group')
+plt.ylabel('Number of Visits to Hospitals per Month')
+plt.title('Distribution of Hospital Visits by Income Group')
+plt.xticks(rotation=45, ha='right')
+plt.grid(axis='y')
+plt.show()
+
+# Count the number of males and females affected by illness
+males_affected = df[df['gender'] == 'Male']['active_illness'].sum()
+females_affected = df[df['gender'] == 'Female']['active_illness'].sum()
+
+# Plotting the bar chart
+plt.figure(figsize=(4, 3))
+genders = ['Male', 'Female']
+affected_counts = [males_affected, females_affected]
+plt.bar(genders, affected_counts, color=['red', 'blue'])
+plt.xlabel('Gender')
+plt.ylabel('Number of Individuals Affected by Illness')
+plt.title('Number of Males and Females Affected by Illness')
+plt.show()
+
+# Plotting the pie chart
+plt.figure(figsize=(4, 3))
+plt.pie(affected_counts, labels=genders, colors=['brown', 'orange'], autopct='%1.1f%%', startangle=140)
+plt.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+plt.title('Proportion of Males and Females Affected by Illness')
+plt.show()
+
+# Count the number of patients in each locality
+locality_counts = df['locality'].value_counts()
+
+# Consider only the top 5 localities with the maximum number of patients
+top_5_localities = locality_counts.head(5)
+
+# Plotting the bar chart
+plt.figure(figsize=(4, 3))
+top_5_localities.plot(kind='barh', color='blue')
+plt.xlabel('Locality')
+plt.ylabel('Number of Patients')
+plt.title('Patient Distribution Across Different Localities')
+plt.xticks(rotation=0)
+plt.show()
+
+# Define age bins
+age_bins = [0, 18, 35, 50, 65, float('inf')]
+age_labels = ['0-18', '19-35', '36-50', '51-65', '65+']
+
+# Segment patients into different age groups
+df['age_group'] = pd.cut(df['age'], bins=age_bins, labels=age_labels, right=False)
+
+# Group by age group and calculate the percentage of people with active illness
+age_group_summary = df.groupby('age_group').agg(
+    percentage_active_illness=('active_illness', lambda x: (x.sum() / len(x)) * 100)
+).reset_index()
+
+# Plotting the analysis results
+plt.figure(figsize=(5, 3))
+plt.bar(age_group_summary['age_group'], age_group_summary['percentage_active_illness'], color='red')
+plt.xlabel('Age Group')
+plt.ylabel('Percentage of People with Active Illness')
+plt.title('Percentage of People with Active illness by Age Group')
+plt.ylim(0, 500)
+plt.show()
+
+
+df = df.sort_values(by='nearest_hospital_dist')
+
+# Plotting the line plot
+plt.figure(figsize=(12, 3))
+plt.plot(df['nearest_hospital_dist'], df['visits_pm'], marker='o', color='blue', linestyle='-')
+plt.xlabel('Distance from Nearest Hospital')
+plt.ylabel('Number of Visits to Hospitals per Month')
+plt.title('Distance from Nearest Hospital vs. Hospital Visits')
+plt.grid(True)
+plt.show()
+
+
+# Group by season and calculate the total active illness cases in each season
+season_illness_counts = df.groupby('season')['active_illness'].sum()
+
+# Plotting the bar chart
+plt.figure(figsize=(4, 3))
+season_illness_counts.plot(kind='bar', color='blue')
+plt.xlabel('Season')
+plt.ylabel(' No. of Active illness Cases')
+plt.title('Active Illness Cases by Season')
+plt.xticks(rotation=90)
+plt.grid(True)
+plt.ylim(0, 1000)
+plt.show()
+
+
+# Plotting the scatter plot
+plt.figure(figsize=(8, 3))
+plt.scatter(df['hospital_exp'], df['visits_pm'], c=df['income_pm'], cmap='viridis', alpha=0.8)
+plt.colorbar(label='Income (per month)')
+plt.xlabel('Healthcare Expenditure')
+plt.ylabel('Number of Doctor Visits per Month')
+plt.title('Relationship between Healthcare Expenditure, Income, and Doctor Visits')
+plt.grid(True)
+plt.show()
+
